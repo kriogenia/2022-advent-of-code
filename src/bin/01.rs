@@ -1,6 +1,6 @@
 use std::{str::FromStr, collections::BinaryHeap};
 
-fn read_lines(input: &str, mut if_empty: impl FnMut(u32) -> ()) {
+fn read_lines(input: &str, mut if_empty: impl FnMut(u32)) {
 	let mut calories_count = 0_u32;
 
 	for line in input.lines() {
@@ -25,7 +25,7 @@ pub fn part_one(input: &str) -> Option<u32> {
 		}
 	});
 
-	return Some(top_calories);
+	Some(top_calories)
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
