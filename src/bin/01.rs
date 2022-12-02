@@ -12,6 +12,7 @@ fn read_lines(input: &str, mut if_empty: impl FnMut(u32) -> ()) {
 			calories_count += calories;
 		}
 	}
+	if_empty(calories_count);
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
@@ -35,7 +36,10 @@ pub fn part_two(input: &str) -> Option<u32> {
 		top_calories.push(calories_count);
 	});
 
-	Some(top_calories.into_iter().take(3).sum())
+	println!("{:?}", top_calories);
+	// let sum = top_calories.into_iter_sorted().take(3).sum() is nightly :(
+	let sum = (0..3).map(|_| top_calories.pop().unwrap()).into_iter().sum();
+	Some(sum)
 }
 
 fn main() {
@@ -51,12 +55,12 @@ mod tests {
     #[test]
     fn test_part_one() {
         let input = advent_of_code::read_file("examples", 1);
-        assert_eq!(part_one(&input), None);
+        assert_eq!(part_one(&input), Some(24000));
     }
 
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 1);
-        assert_eq!(part_two(&input), None);
+        assert_eq!(part_two(&input), Some(45000));
     }
 }
