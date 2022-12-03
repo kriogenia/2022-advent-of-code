@@ -1,7 +1,14 @@
 use std::{collections::HashMap};
 
+const ELVES_PER_GROUP: usize = 3;
+const MAX_LINE_LENGTH: usize = 50;
 const LOWERCASE_SUBSTRACTION: u8 = b'a' - 1;
 const UPPERCASE_SUBSTRACTION: u8 = b'A' - 27;
+
+enum Side {
+    Left,
+    Right,
+}
 
 fn get_priority(value: u8) -> u32 {
     if value < b'a' {
@@ -12,16 +19,10 @@ fn get_priority(value: u8) -> u32 {
     .into()
 }
 
-#[derive(Debug)]
-enum Side {
-    Left,
-    Right,
-}
-
 fn find_mistaken(line: &str) -> Option<u32> {
-	let mut map = HashMap::with_capacity(line.len());
+	let mut map = HashMap::with_capacity(MAX_LINE_LENGTH);
 	let (l, r) = line.as_bytes().split_at(line.len() / 2);
-	for (left, right) in l.into_iter().zip(r) {
+	for (left, right) in l.iter().zip(r) {
 		if let Some(Side::Right) = map.insert(left, Side::Left) {
 			return Some(get_priority(*left));
 		}
@@ -29,19 +30,42 @@ fn find_mistaken(line: &str) -> Option<u32> {
 			return Some(get_priority(*right));
 		}
 	}
-	return None;
+	None
+}
+
+fn find_common(group: &[&str]) -> Option<u32> {
+	let mut map = HashMap::with_capacity(MAX_LINE_LENGTH);
+	// as we only care if the char is present in all the group we can use the first elf as the initial cache
+	for b in group[0].as_bytes() {
+		map.insert(*b, 1);
+	}
+	// then for the second we only care to specify if they are also present
+	for b in group[1].as_bytes() {
+		map.entry(*b).and_modify(|v| *v = 2);
+	}
+	// and the last should pick the first item that is already present in the other two
+	for b in group[2].as_bytes() {
+		if let Some(&2) = map.get(b) {
+			return Some(get_priority(*b));
+		}
+	}
+	None
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
 	let mut sum = 0;
 	for line in input.lines() {
-		sum += find_mistaken(&line).expect("all lines should have a mistaken item");
+		sum += find_mistaken(line).expect("rucksacks to have at least one wrong item");
 	}
-    return Some(sum);
+    Some(sum)
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+	let mut sum = 0;
+	for group in input.lines().collect::<Vec<&str>>().chunks(ELVES_PER_GROUP) {
+		sum += find_common(group).expect("groups to have a common item")
+	}
+	Some(sum)
 }
 
 fn main() {
@@ -63,6 +87,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 3);
-        assert_eq!(part_two(&input), None);
+        assert_eq!(part_two(&input), Some(70));
     }
 }
