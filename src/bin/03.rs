@@ -1,5 +1,9 @@
 use std::{collections::HashMap};
 
+const DAY: u8 = 3;
+type Input<'a> = &'a str;
+type Solution = Option<u32>;
+
 const ELVES_PER_GROUP: usize = 3;
 const MAX_LINE_LENGTH: usize = 50;
 const LOWERCASE_SUBSTRACTION: u8 = b'a' - 1;
@@ -52,7 +56,7 @@ fn find_common(group: &[&str]) -> Option<u32> {
 	None
 }
 
-pub fn part_one(input: &str) -> Option<u32> {
+pub fn part_one(input: Input) -> Solution {
 	let mut sum = 0;
 	for line in input.lines() {
 		sum += find_mistaken(line).expect("rucksacks to have at least one wrong item");
@@ -60,7 +64,7 @@ pub fn part_one(input: &str) -> Option<u32> {
     Some(sum)
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
+pub fn part_two(input: Input) -> Solution {
 	let mut sum = 0;
 	for group in input.lines().collect::<Vec<&str>>().chunks(ELVES_PER_GROUP) {
 		sum += find_common(group).expect("groups to have a common item")
@@ -69,7 +73,7 @@ pub fn part_two(input: &str) -> Option<u32> {
 }
 
 fn main() {
-    let input = &advent_of_code::read_file("inputs", 3);
+    let input = &advent_of_code::read_file("inputs", DAY);
     advent_of_code::solve!(1, part_one, input);
     advent_of_code::solve!(2, part_two, input);
 }
@@ -80,13 +84,13 @@ mod tests {
 
     #[test]
     fn test_part_one() {
-        let input = advent_of_code::read_file("examples", 3);
+        let input = advent_of_code::read_file("examples", DAY);
         assert_eq!(part_one(&input), Some(157));
     }
 
     #[test]
     fn test_part_two() {
-        let input = advent_of_code::read_file("examples", 3);
+        let input = advent_of_code::read_file("examples", DAY);
         assert_eq!(part_two(&input), Some(70));
     }
 }

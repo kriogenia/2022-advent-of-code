@@ -2,8 +2,8 @@ use advent_of_code::helpers::AocResult;
 use std::{collections::BinaryHeap, str::FromStr};
 
 const DAY: u8 = 1;
-type Input = Vec<Line>;
-type Solution = u32;
+type Input<'a> = &'a [Line];
+type Solution = Option<u32>;
 
 pub enum Line {
     Empty,
@@ -24,7 +24,7 @@ impl FromStr for Line {
     }
 }
 
-fn read_lines(input: &Input, mut if_empty: impl FnMut(u32)) {
+fn read_lines(input: Input, mut if_empty: impl FnMut(u32)) {
     let mut calories_count = 0_u32;
 
     input.iter().for_each(|line| match line {
@@ -37,7 +37,7 @@ fn read_lines(input: &Input, mut if_empty: impl FnMut(u32)) {
     if_empty(calories_count);
 }
 
-pub fn part_one(input: &Input) -> Option<Solution> {
+pub fn part_one(input: Input) -> Solution {
     let mut top_calories = 0;
 
     // simple solution with count and max comparison, memory efficient
@@ -50,7 +50,7 @@ pub fn part_one(input: &Input) -> Option<Solution> {
     Some(top_calories)
 }
 
-pub fn part_two(input: &Vec<Line>) -> Option<Solution> {
+pub fn part_two(input: Input) -> Solution {
     let mut top_calories = BinaryHeap::with_capacity(3);
 
     // let's just use heaps, it's actually faster tho

@@ -3,8 +3,8 @@ use std::{str::FromStr};
 use advent_of_code::helpers::AocResult;
 
 const DAY: u8 = 2;
-type Input = Vec<Line>;
-type Solution = u32;
+type Input<'a> = &'a [Line];
+type Solution = Option<u32>;
 
 pub struct Line(u8, u8);
 
@@ -125,7 +125,7 @@ where
 	}
 }
 
-fn process_plays(input: &Input, calculate_play: impl Fn(&Line) -> (Play, Play)) -> u32 {
+fn process_plays(input: Input, calculate_play: impl Fn(&Line) -> (Play, Play)) -> u32 {
 	let mut total_score = 0;
 	for line in input.iter() {
 		let (my_play, opponent_play) = calculate_play(line);
@@ -134,14 +134,14 @@ fn process_plays(input: &Input, calculate_play: impl Fn(&Line) -> (Play, Play)) 
 	total_score
 }
 
-pub fn part_one(input: &Input) -> Option<Solution> {
+pub fn part_one(input: Input) -> Solution {
 	let score = process_plays(input, |line| {
 		parse_line(line).expect("line with two correct plays")
 	});
 	Some(score)
 }
 
-pub fn part_two(input: &Input) -> Option<Solution> {
+pub fn part_two(input: Input) -> Solution {
 	let score = process_plays(input, |line| {
 		let (opponent_play, intended_result) = parse_line(line).expect("line with play and result");
 		let to_play = needed_play_for(intended_result, &opponent_play);

@@ -9,8 +9,10 @@ This repository uses a template of [fspoettel](https://github.com/fspoettel/adve
 
 The following times were recorded in my local machine. Parsing time is usually considered out of the equation.
 
-|        | Part 1  | Part 2  |
-|--------|---------|---------|
-| Day 01 | 8.03µs  | 22.28µs | 
-| Day 02 | 35.27µs | 36.60µs |
-| Day... | TBM     | TBM     |
+|        | Part 1   | Part 2   |
+|--------|----------|----------|
+| Day 01 | 8.03µs   | 22.28µs  | 
+| Day 02 | 35.27µs  | 36.60µs  |
+| Day 03 | 208.27µs | 207.92µs |
+| Day 04 | 2.86µs   | 2.79µs   |
+| Day... | TBM      | TBM      |
