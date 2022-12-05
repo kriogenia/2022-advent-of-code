@@ -4,6 +4,39 @@ use std::{
     str::{FromStr, SplitWhitespace},
 };
 
+use advent_of_code::helpers::{AocResult, Folder};
+
+const DAY: u8 = 5;
+type Input<'a> = &'a [Line];
+type Solution = Option<String>;
+
+pub enum Line {
+    Block(String),
+    Index,
+    Empty,
+    Move(Movement),
+}
+
+impl FromStr for Line {
+	type Err = String;
+
+    fn from_str(input: &str) -> AocResult<Self> {
+        match input.trim_start().as_bytes().first() {
+            None => Ok(Self::Empty),
+            Some(b'[') => Ok(Self::Block(input.to_owned())),
+            Some(b'1') => Ok(Self::Index),
+            Some(b'm') => {
+                let mut splits = input.split_whitespace();
+                let quantity = next_number(&mut splits);
+                let from = next_number(&mut splits);
+                let to = next_number(&mut splits);
+                Ok(Self::Move(Movement { quantity, from, to }))
+            }
+            _ => Err(format!("Unexpected line: '{input}'")),
+        }
+    }
+}
+
 struct Stacks {
     vec: Vec<VecDeque<u8>>,
 }
@@ -22,7 +55,7 @@ impl Stacks {
     }
 
 	/// Moves elements from one stack to another one by one
-    fn move_cargo_single(&mut self, movement: Movement) {
+    fn move_cargo_single(&mut self, movement: &Movement) {
         for _ in 0..movement.quantity {
             let cargo = self.vec[movement.from - 1].pop_front().expect("content in a stack to be moved");
             self.vec[movement.to - 1].push_front(cargo)
@@ -30,7 +63,7 @@ impl Stacks {
     }
 
 	/// Moves elements from one stack to other by chunks
-	fn move_cargo_block(&mut self, movement: Movement) {
+	fn move_cargo_block(&mut self, movement: &Movement) {
 		let elements: Vec<u8> = self.vec[movement.from - 1].drain(0..movement.quantity as usize).rev().collect();
 		for element in elements {
 			self.vec[movement.to - 1].push_front(element);
@@ -44,35 +77,10 @@ impl Stacks {
     }
 }
 
-struct Movement {
+pub struct Movement {
     quantity: u32,
     from: usize,
     to: usize,
-}
-
-enum Line<'a> {
-    Block(&'a str),
-    Index,
-    Empty,
-    Move(Movement),
-}
-
-impl<'a> From<&'a str> for Line<'a> {
-    fn from(input: &'a str) -> Self {
-        match input.trim_start().as_bytes().first() {
-            None => Self::Empty,
-            Some(b'[') => Self::Block(input),
-            Some(b'1') => Self::Index,
-            Some(b'm') => {
-                let mut splits = input.split_whitespace();
-                let quantity = next_number(&mut splits);
-                let from = next_number(&mut splits);
-                let to = next_number(&mut splits);
-                Self::Move(Movement { quantity, from, to })
-            }
-            _ => unreachable!("unexpected line"),
-        }
-    }
 }
 
 fn next_number<T>(splits: &mut SplitWhitespace) -> T
@@ -103,12 +111,11 @@ fn process_cargo_line(line: &str, stacks: &mut Stacks) {
         });
 }
 
-fn process_instructions(input: &str, action: impl Fn(&mut Stacks, Movement)) -> String {
+fn process_instructions(input: Input, action: impl Fn(&mut Stacks, &Movement)) -> String {
 	let mut stacks = Stacks::new();
 
     input
-        .lines()
-        .map(Line::from)
+        .iter()
         .for_each(|line| match line {
             Line::Block(line) => process_cargo_line(line, &mut stacks),
             Line::Move(movement) => action(&mut stacks, movement),
@@ -118,18 +125,19 @@ fn process_instructions(input: &str, action: impl Fn(&mut Stacks, Movement)) -> 
     stacks.print_top()
 }
 
-pub fn part_one(input: &str) -> Option<String> {
+pub fn part_one(input: Input) -> Solution {
     Some(process_instructions(input, Stacks::move_cargo_single))
 }
 
-pub fn part_two(input: &str) -> Option<String> {
+pub fn part_two(input: Input) -> Solution {
     Some(process_instructions(input, Stacks::move_cargo_block))
 }
 
-fn main() {
-    let input = &advent_of_code::read_file("inputs", 5);
+fn main() -> AocResult<()> {
+    let input = &advent_of_code::helpers::read_input(Folder::Inputs, DAY)?;
     advent_of_code::solve!(1, part_one, input);
     advent_of_code::solve!(2, part_two, input);
+	Ok(())
 }
 
 #[cfg(test)]
@@ -138,13 +146,13 @@ mod tests {
 
     #[test]
     fn test_part_one() {
-        let input = advent_of_code::read_file("examples", 5);
+		let input = &advent_of_code::helpers::read_input(Folder::Examples, DAY).unwrap();
         assert_eq!(part_one(&input), Some("CMZ".to_string()));
     }
 
     #[test]
     fn test_part_two() {
-        let input = advent_of_code::read_file("examples", 5);
+		let input = &advent_of_code::helpers::read_input(Folder::Examples, DAY).unwrap();
         assert_eq!(part_two(&input), Some("MCD".to_string()));
     }
 }

@@ -6,6 +6,8 @@
 use std::env;
 use std::fs;
 
+use helpers::Folder;
+
 pub mod helpers;
 
 pub const ANSI_ITALIC: &str = "\x1b[3m";
@@ -41,10 +43,10 @@ macro_rules! solve {
     }};
 }
 
-pub fn read_file(folder: &str, day: u8) -> String {
+pub fn read_file(folder: Folder, day: u8) -> String {
     let cwd = env::current_dir().unwrap();
 
-    let filepath = cwd.join("src").join(folder).join(format!("{:02}.txt", day));
+    let filepath = cwd.join("src").join(folder.path()).join(format!("{:02}.txt", day));
 
     let f = fs::read_to_string(filepath);
     f.expect("could not open input file")

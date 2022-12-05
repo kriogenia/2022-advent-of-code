@@ -1,4 +1,4 @@
-use advent_of_code::helpers::AocResult;
+use advent_of_code::helpers::{AocResult, Folder};
 use std::{collections::BinaryHeap, str::FromStr};
 
 const DAY: u8 = 1;
@@ -67,7 +67,7 @@ pub fn part_two(input: Input) -> Solution {
 }
 
 fn main() -> AocResult<()> {
-    let input = advent_of_code::helpers::read_input("inputs", DAY)?;
+    let input = advent_of_code::helpers::read_input(Folder::Inputs, DAY)?;
     advent_of_code::solve!(1, part_one, &input);
     advent_of_code::solve!(2, part_two, &input);
     Ok(())
@@ -79,13 +79,13 @@ mod tests {
 
     #[test]
     fn test_part_one() {
-        let input = advent_of_code::helpers::read_input("examples", DAY).unwrap();
+        let input = advent_of_code::helpers::read_input(Folder::Examples, DAY).unwrap();
         assert_eq!(part_one(&input), Some(24000));
     }
 
     #[test]
     fn test_part_two() {
-        let input = advent_of_code::helpers::read_input("examples", DAY).unwrap();
+        let input = advent_of_code::helpers::read_input(Folder::Examples, DAY).unwrap();
         assert_eq!(part_two(&input), Some(45000));
     }
 }

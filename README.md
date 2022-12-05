@@ -14,5 +14,6 @@ The following times were recorded in my local machine. Parsing time is usually c
 | Day 01 | 8.03µs   | 22.28µs  | 
 | Day 02 | 35.27µs  | 36.60µs  |
 | Day 03 | 208.27µs | 207.92µs |
-| Day 04 | 2.86µs   | 2.79µs   |
+| Day 04 | 2.86µs   | 1.89µs   |
+| Day 04 | 23.96µs  | 64.81µs  |
 | Day... | TBM      | TBM      |

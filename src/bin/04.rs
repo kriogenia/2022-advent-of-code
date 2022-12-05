@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use advent_of_code::helpers::AocResult;
+use advent_of_code::helpers::{AocResult, Folder};
 
 const DAY: u8 = 4;
 type Input<'a> = &'a [Line];
@@ -71,7 +71,7 @@ pub fn part_two(input: Input) -> Solution {
 }
 
 fn main() -> AocResult<()> {
-    let input = advent_of_code::helpers::read_input("inputs", DAY)?;
+    let input = advent_of_code::helpers::read_input(Folder::Inputs, DAY)?;
     advent_of_code::solve!(1, part_one, &input);
     advent_of_code::solve!(2, part_two, &input);
     Ok(())
@@ -83,13 +83,13 @@ mod tests {
 
     #[test]
     fn test_part_one() {
-        let input = advent_of_code::helpers::read_input("examples", DAY).unwrap();
+        let input = advent_of_code::helpers::read_input(Folder::Examples, DAY).unwrap();
         assert_eq!(part_one(&input), Some(2));
     }
 
     #[test]
     fn test_part_two() {
-        let input = advent_of_code::helpers::read_input("examples", DAY).unwrap();
+        let input = advent_of_code::helpers::read_input(Folder::Examples, DAY).unwrap();
         assert_eq!(part_two(&input), Some(4));
     }
 }
