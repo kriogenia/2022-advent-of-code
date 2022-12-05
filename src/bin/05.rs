@@ -13,24 +13,29 @@ impl Stacks {
         Stacks { vec: Vec::new() }
     }
 
-    fn expand(&mut self) {
-        self.vec.push(VecDeque::new())
-    }
-
     /// Adds the cargo to the desired crate, if it doesn't exists yet, creates it
     fn push_to(&mut self, index: usize, cargo: u8) {
         while index >= self.vec.len() {
-            self.expand()
+            self.vec.push(VecDeque::new())
         }
         self.vec[index].push_back(cargo)
     }
 
-    fn move_cargo(&mut self, movement: Movement) {
+	/// Moves elements from one stack to another one by one
+    fn move_cargo_single(&mut self, movement: Movement) {
         for _ in 0..movement.quantity {
             let cargo = self.vec[movement.from - 1].pop_front().expect("content in a stack to be moved");
             self.vec[movement.to - 1].push_front(cargo)
         }
     }
+
+	/// Moves elements from one stack to other by chunks
+	fn move_cargo_block(&mut self, movement: Movement) {
+		let elements: Vec<u8> = self.vec[movement.from - 1].drain(0..movement.quantity as usize).rev().collect();
+		for element in elements {
+			self.vec[movement.to - 1].push_front(element);
+		}
+	}
 
     /// Returns a string with the IDs of the cargos on top of each stack
     fn print_top(&self) -> String {
@@ -79,7 +84,7 @@ where
     str::parse(splits.next().expect("movement lines to have even elements")).expect("even elements to be numbers")
 }
 
-fn read_chunk(chunk: &[u8]) -> Option<&u8> {
+fn get_id(chunk: &[u8]) -> Option<&u8> {
     match chunk.get(1) {
         Some(id) if !id.is_ascii_whitespace() => Some(id),
         _ => None,
@@ -89,7 +94,7 @@ fn read_chunk(chunk: &[u8]) -> Option<&u8> {
 fn process_cargo_line(line: &str, stacks: &mut Stacks) {
     line.as_bytes()
         .chunks(4)
-        .map(read_chunk)
+        .map(get_id)
         .enumerate()
         .for_each(|(i, chunk)| {
             if let Some(id) = chunk {
@@ -98,23 +103,27 @@ fn process_cargo_line(line: &str, stacks: &mut Stacks) {
         });
 }
 
-pub fn part_one(input: &str) -> Option<String> {
-    let mut stacks = Stacks::new();
+fn process_instructions(input: &str, action: impl Fn(&mut Stacks, Movement)) -> String {
+	let mut stacks = Stacks::new();
 
     input
         .lines()
         .map(Line::from)
         .for_each(|line| match line {
             Line::Block(line) => process_cargo_line(line, &mut stacks),
-            Line::Move(movement) => stacks.move_cargo(movement),
+            Line::Move(movement) => action(&mut stacks, movement),
             _ => {}
         });
 
-    Some(stacks.print_top())
+    stacks.print_top()
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
-    None
+pub fn part_one(input: &str) -> Option<String> {
+    Some(process_instructions(input, Stacks::move_cargo_single))
+}
+
+pub fn part_two(input: &str) -> Option<String> {
+    Some(process_instructions(input, Stacks::move_cargo_block))
 }
 
 fn main() {
@@ -136,6 +145,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 5);
-        assert_eq!(part_two(&input), None);
+        assert_eq!(part_two(&input), Some("MCD".to_string()));
     }
 }
