@@ -1,3 +1,24 @@
+use std::{str::FromStr};
+
+use advent_of_code::helpers::AocResult;
+
+const DAY: u8 = 2;
+type Input = Vec<Line>;
+type Solution = u32;
+
+pub struct Line(u8, u8);
+
+impl FromStr for Line {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.as_bytes() {
+			[left, _, right, ..] => Ok(Line(*left, *right)),
+			_ => Err(format!("line not matching `[0.9] [0-9].*`: {s}"))
+		}
+    }
+}
+
 #[derive(Clone, PartialEq)]
 enum Play {
 	Rock,
@@ -42,10 +63,10 @@ impl Play {
     }
 }
 
-impl TryFrom<&u8> for Play {
+impl TryFrom<u8> for Play {
     type Error = ();
 
-    fn try_from(value: &u8) -> Result<Self, Self::Error> {
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
 		match value {
 			b'A' | b'X' => Ok(Self::Rock),
 			b'B' | b'Y' => Ok(Self::Paper),
@@ -71,10 +92,10 @@ impl RoundResult {
 	}
 }
 
-impl TryFrom<&u8> for RoundResult {
+impl TryFrom<u8> for RoundResult {
     type Error = ();
 
-    fn try_from(value: &u8) -> Result<Self, Self::Error> {
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
 		match value {
 			b'X' => Ok(RoundResult::Loss),
 			b'Y' => Ok(RoundResult::Draw),
@@ -92,35 +113,35 @@ fn needed_play_for(result: RoundResult, against: &Play) -> Play {
 	}
 }
 
-// I'm pretty proud of this one, let's just build what we need with just a function
-fn parse_line<'a, L, R>(input: &'a [u8]) -> Option<(L, R)> 
+// I'm pretty proud of this one, let's just build what we need with a single function
+fn parse_line<L, R>(input: &Line) -> Option<(L, R)> 
 where
-	L: TryFrom<&'a u8>,
-	R: TryFrom<&'a u8>,
+	L: TryFrom<u8>,
+	R: TryFrom<u8>,
 {
-	match ((&input[0]).try_into(), (&input[2]).try_into()) {
+	match (input.0.try_into(), input.1.try_into()) {
 		(Ok(left), Ok(right)) => Some((left, right)),
 		_ =>  None
 	}
 }
 
-fn process_plays(input: &str, calculate_play: impl Fn(&[u8]) -> (Play, Play)) -> u32 {
+fn process_plays(input: &Input, calculate_play: impl Fn(&Line) -> (Play, Play)) -> u32 {
 	let mut total_score = 0;
-	for line in input.lines() {
-		let (my_play, opponent_play) = calculate_play(line.as_bytes());
+	for line in input.iter() {
+		let (my_play, opponent_play) = calculate_play(line);
 		total_score += my_play.point_value() + my_play.clash_with(&opponent_play).value();
 	}
 	total_score
 }
 
-pub fn part_one(input: &str) -> Option<u32> {
+pub fn part_one(input: &Input) -> Option<Solution> {
 	let score = process_plays(input, |line| {
 		parse_line(line).expect("line with two correct plays")
 	});
 	Some(score)
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
+pub fn part_two(input: &Input) -> Option<Solution> {
 	let score = process_plays(input, |line| {
 		let (opponent_play, intended_result) = parse_line(line).expect("line with play and result");
 		let to_play = needed_play_for(intended_result, &opponent_play);
@@ -129,10 +150,11 @@ pub fn part_two(input: &str) -> Option<u32> {
 	Some(score)
 }
 
-fn main() {
-    let input = &advent_of_code::read_file("inputs", 2);
-    advent_of_code::solve!(1, part_one, input);
-    advent_of_code::solve!(2, part_two, input);
+fn main() -> AocResult<()> {
+    let input = advent_of_code::helpers::read_input("inputs", DAY)?;
+    advent_of_code::solve!(1, part_one, &input);
+    advent_of_code::solve!(2, part_two, &input);
+	Ok(())
 }
 
 #[cfg(test)]
@@ -141,13 +163,13 @@ mod tests {
 
     #[test]
     fn test_part_one() {
-        let input = advent_of_code::read_file("examples", 2);
+        let input = advent_of_code::helpers::read_input("examples", DAY).unwrap();
         assert_eq!(part_one(&input), Some(15));
     }
 
     #[test]
     fn test_part_two() {
-        let input = advent_of_code::read_file("examples", 2);
+        let input = advent_of_code::helpers::read_input("examples", DAY).unwrap();
         assert_eq!(part_two(&input), Some(12));
     }
 }

@@ -1,6 +1,7 @@
 use advent_of_code::helpers::AocResult;
 use std::{collections::BinaryHeap, str::FromStr};
 
+const DAY: u8 = 1;
 type Input = Vec<Line>;
 type Solution = u32;
 
@@ -10,13 +11,14 @@ pub enum Line {
 }
 
 impl FromStr for Line {
-    type Err = ();
+    type Err = String;
 
     fn from_str(s: &str) -> AocResult<Self> {
         if s.is_empty() {
             Ok(Self::Empty)
         } else {
-            let calories: u32 = FromStr::from_str(s).or(Err(()))?;
+            let calories: u32 =
+                FromStr::from_str(s).map_err(|_| format!("invalid calories number: {s}"))?;
             Ok(Self::Calories(calories))
         }
     }
@@ -57,7 +59,7 @@ pub fn part_two(input: &Vec<Line>) -> Option<Solution> {
     });
 
     // let sum = top_calories.into_iter_sorted().take(3).sum() is nightly :(
-	let sum = (0..3)
+    let sum = (0..3)
         .map(|_| top_calories.pop().expect("heap to have at least 3 items"))
         .into_iter()
         .sum();
@@ -65,13 +67,9 @@ pub fn part_two(input: &Vec<Line>) -> Option<Solution> {
 }
 
 fn main() -> AocResult<()> {
-    let lines = advent_of_code::read_file("inputs", 1)
-        .lines()
-        .map(Line::from_str)
-        .collect::<AocResult<Input>>()?;
-
-    advent_of_code::solve!(1, part_one, &lines);
-    advent_of_code::solve!(2, part_two, &lines);
+    let input = advent_of_code::helpers::read_input("inputs", DAY)?;
+    advent_of_code::solve!(1, part_one, &input);
+    advent_of_code::solve!(2, part_two, &input);
     Ok(())
 }
 
@@ -79,22 +77,15 @@ fn main() -> AocResult<()> {
 mod tests {
     use super::*;
 
-	fn test_content() -> Input {
-		advent_of_code::read_file("examples", 1)
-		.lines()
-		.filter_map(|l| Line::from_str(l).ok())
-		.collect()
-	}
-
     #[test]
     fn test_part_one() {
-        let input = test_content();
+        let input = advent_of_code::helpers::read_input("examples", DAY).unwrap();
         assert_eq!(part_one(&input), Some(24000));
     }
 
     #[test]
     fn test_part_two() {
-        let input = test_content();
+        let input = advent_of_code::helpers::read_input("examples", DAY).unwrap();
         assert_eq!(part_two(&input), Some(45000));
     }
 }
