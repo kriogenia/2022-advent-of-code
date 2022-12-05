@@ -1,66 +1,100 @@
-use std::{str::FromStr, collections::BinaryHeap};
+use advent_of_code::helpers::AocResult;
+use std::{collections::BinaryHeap, str::FromStr};
 
-fn read_lines(input: &str, mut if_empty: impl FnMut(u32)) {
-	let mut calories_count = 0_u32;
+type Input = Vec<Line>;
+type Solution = u32;
 
-	for line in input.lines() {
-		if line.is_empty() {
-			if_empty(calories_count);
-			calories_count = 0;
-		} else {
-			let calories: u32 = FromStr::from_str(line).expect("the text to be a 32bit integer");
-			calories_count += calories;
-		}
-	}
-	if_empty(calories_count);
+pub enum Line {
+    Empty,
+    Calories(u32),
 }
 
-pub fn part_one(input: &str) -> Option<u32> {
-	let mut top_calories = 0;
+impl FromStr for Line {
+    type Err = ();
 
-	// simple solution with count and max comparison, memory efficient
-	read_lines(input, |calories_count| {
-		if calories_count > top_calories {
-			top_calories = calories_count;
-		}
-	});
-
-	Some(top_calories)
+    fn from_str(s: &str) -> AocResult<Self> {
+        if s.is_empty() {
+            Ok(Self::Empty)
+        } else {
+            let calories: u32 = FromStr::from_str(s).or(Err(()))?;
+            Ok(Self::Calories(calories))
+        }
+    }
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
-	let mut top_calories = BinaryHeap::with_capacity(3);
+fn read_lines(input: &Input, mut if_empty: impl FnMut(u32)) {
+    let mut calories_count = 0_u32;
 
-	// let's just use heaps, it's actually faster tho
-	read_lines(input, |calories_count| {
-		top_calories.push(calories_count);
-	});
-
-	println!("{:?}", top_calories);
-	// let sum = top_calories.into_iter_sorted().take(3).sum() is nightly :(
-	let sum = (0..3).map(|_| top_calories.pop().unwrap()).into_iter().sum();
-	Some(sum)
+    input.iter().for_each(|line| match line {
+        Line::Empty => {
+            if_empty(calories_count);
+            calories_count = 0;
+        }
+        Line::Calories(calories) => calories_count += calories,
+    });
+    if_empty(calories_count);
 }
 
-fn main() {
-    let input = &advent_of_code::read_file("inputs", 1);
-    advent_of_code::solve!(1, part_one, input);
-    advent_of_code::solve!(2, part_two, input);
+pub fn part_one(input: &Input) -> Option<Solution> {
+    let mut top_calories = 0;
+
+    // simple solution with count and max comparison, memory efficient
+    read_lines(input, |calories_count| {
+        if calories_count > top_calories {
+            top_calories = calories_count;
+        }
+    });
+
+    Some(top_calories)
+}
+
+pub fn part_two(input: &Vec<Line>) -> Option<Solution> {
+    let mut top_calories = BinaryHeap::with_capacity(3);
+
+    // let's just use heaps, it's actually faster tho
+    read_lines(input, |calories_count| {
+        top_calories.push(calories_count);
+    });
+
+    // let sum = top_calories.into_iter_sorted().take(3).sum() is nightly :(
+	let sum = (0..3)
+        .map(|_| top_calories.pop().expect("heap to have at least 3 items"))
+        .into_iter()
+        .sum();
+    Some(sum)
+}
+
+fn main() -> AocResult<()> {
+    let lines = advent_of_code::read_file("inputs", 1)
+        .lines()
+        .map(Line::from_str)
+        .collect::<AocResult<Input>>()?;
+
+    advent_of_code::solve!(1, part_one, &lines);
+    advent_of_code::solve!(2, part_two, &lines);
+    Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+	fn test_content() -> Input {
+		advent_of_code::read_file("examples", 1)
+		.lines()
+		.filter_map(|l| Line::from_str(l).ok())
+		.collect()
+	}
+
     #[test]
     fn test_part_one() {
-        let input = advent_of_code::read_file("examples", 1);
+        let input = test_content();
         assert_eq!(part_one(&input), Some(24000));
     }
 
     #[test]
     fn test_part_two() {
-        let input = advent_of_code::read_file("examples", 1);
+        let input = test_content();
         assert_eq!(part_two(&input), Some(45000));
     }
 }
