@@ -8,18 +8,37 @@ use std::{
     process,
 };
 
-const MODULE_TEMPLATE: &str = r###"pub fn part_one(input: &str) -> Option<u32> {
+const MODULE_TEMPLATE: &str = r###"use advent_of_code::helpers::{AocResult, Folder};
+use std::str::FromStr;
+
+const DAY: u8 = $DAY;
+type Input<'a> = &'a [Line];
+type Solution = Option<u32>;
+
+pub struct Line {}
+
+impl FromStr for Line {
+    type Err = String;
+
+    fn from_str(s: &str) -> AocResult<Self> {
+        todo!()
+    }
+}
+
+pub fn part_one(input: Input) -> Solution {
     None
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
+pub fn part_two(input: Input) -> Solution {
     None
 }
 
-fn main() {
-    let input = &advent_of_code::read_file("inputs", DAY);
+fn main() -> AocResult<()> {
+    let input = advent_of_code::helpers::read_input(Folder::Inputs, DAY)?;
+    //let input = &advent_of_code::read_file("inputs", DAY);				// if you want just the string
     advent_of_code::solve!(1, part_one, input);
     advent_of_code::solve!(2, part_two, input);
+	Ok(())
 }
 
 #[cfg(test)]
@@ -28,13 +47,13 @@ mod tests {
 
     #[test]
     fn test_part_one() {
-        let input = advent_of_code::read_file("examples", DAY);
+        let input = advent_of_code::helpers::read_input(Folder::Examples, DAY).unwrap();
         assert_eq!(part_one(&input), None);
     }
-
+	
     #[test]
     fn test_part_two() {
-        let input = advent_of_code::read_file("examples", DAY);
+		let input = advent_of_code::helpers::read_input(Folder::Examples, DAY).unwrap();
         assert_eq!(part_two(&input), None);
     }
 }
@@ -76,7 +95,7 @@ fn main() {
         }
     };
 
-    match file.write_all(MODULE_TEMPLATE.replace("DAY", &day.to_string()).as_bytes()) {
+    match file.write_all(MODULE_TEMPLATE.replace("$DAY", &day.to_string()).as_bytes()) {
         Ok(_) => {
             println!("Created module file \"{}\"", &module_path);
         }
