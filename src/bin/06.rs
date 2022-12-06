@@ -4,151 +4,196 @@ const DAY: u8 = 6;
 type Input<'a> = &'a [u8];
 type Solution = Option<usize>;
 
-const MARKER_SIZE: usize = 4;
-const SAVED_ELEMENTS: usize = MARKER_SIZE - 1;
-const MEMORY_SIZE: usize = SAVED_ELEMENTS * 2;
+// Marker for Part One
+mod part_one {
+    use crate::Marker;
 
-struct Marker([u8; MEMORY_SIZE]);
+    const SIZE: usize = 4;
+    const ELEMENTS: usize = SIZE - 1;
+    type Array = [u8; ELEMENTS * 2];
 
-impl Marker {
-	/// Inits the marker with the first three elements, it's a naive implementation.
-	/// It does not check if the three are different, it expects them to be. If they're not, early exit is possible.
-	/// Use only when the input is known to be valid (my case)
-	#[cfg(not(test))]
-	fn init(starting: &[u8]) -> Self {
-		if starting.len() != SAVED_ELEMENTS {
-			panic!("the marker should only hold {SAVED_ELEMENTS} elements")
-		}
-		let mut elements = [0; MEMORY_SIZE];
-		elements[..SAVED_ELEMENTS].copy_from_slice(starting);
-		Self(elements)
-	}
+    pub struct MarkerOne(Array);
 
-	/// Inits the marker with the first three elements, it checks if the elements are repeated creating a Marker in valid state.
-	/// Required for testing as some of the examples would be fail otherwise
-	#[cfg(test)]
-	fn init(starting: &[u8]) -> Self {
-		if starting.len() != SAVED_ELEMENTS {
-			panic!("the marker should only hold {SAVED_ELEMENTS} elements")
-		}
-		let mut marker = Self([0; MEMORY_SIZE]);
-		for b in starting {
-			marker.push(*b);
-		}
-		marker
-	}
+    impl MarkerOne {
+        /// Inits the marker with the first three elements, it checks if the elements are repeated creating a Marker in valid state.
+        pub fn init(starting: &[u8]) -> Self {
+            let mut marker = Self([0; ELEMENTS * 2]);
+            for b in &starting[..ELEMENTS] {
+                marker.push(*b);
+            }
+            marker
+        }
+    }
 
-	/// Send the byte to the marker, it returns `true` if the push was succesful and false otherwise
-	/// The push can fail if the Marker is full and there's no value equal to the given one
-	fn push(&mut self, new: u8) -> bool {
-		for i in (0..MARKER_SIZE).rev() {
-			if self.0[i] == new {
-				self.advance(i + 1);
-				break;
-			}
-		}
-		self.add(new)
-	}
+    impl Marker for MarkerOne {
+        fn advance(&mut self, positions: usize) {
+            let mut cached = [0; ELEMENTS];
+            cached.copy_from_slice(&self.0[positions..ELEMENTS + positions]);
+            self.0[..ELEMENTS].copy_from_slice(&cached)
+        }
+        fn content(&mut self) -> &mut [u8] {
+            &mut self.0
+        }
+        fn size(&self) -> usize {
+            SIZE
+        }
+        fn elements(&self) -> usize {
+            ELEMENTS
+        }
+    }
+}
 
-	/// Tries to add the value to the array, if it fails (the array is full) then return false, otherwise returns true
-	fn add(&mut self, new: u8) -> bool {
-		for i in 0..SAVED_ELEMENTS {
-			if self.0[i] == 0 {
-				self.0[i] = new;
-				return true;
-			}
-		}
-		false
-	}
+// Marker for Part Two
+mod part_two {
+    use crate::Marker;
 
-	/// Advances the elements n positions
-	fn advance(&mut self, positions: usize) {
-		let mut cached = [0; SAVED_ELEMENTS];
-		cached.copy_from_slice(&self.0[positions..SAVED_ELEMENTS + positions]);
-		self.0[..SAVED_ELEMENTS].copy_from_slice(&cached)
-	}
+    const SIZE: usize = 14;
+    const ELEMENTS: usize = SIZE - 1;
+    type Array = [u8; ELEMENTS * 2];
 
+    pub struct MarkerTwo(Array);
+
+    impl MarkerTwo {
+        /// Inits the marker with the first three elements, it checks if the elements are repeated creating a Marker in valid state.
+        pub fn init(starting: &[u8]) -> Self {
+            let mut marker = Self([0; ELEMENTS * 2]);
+            for b in &starting[..ELEMENTS] {
+                marker.push(*b);
+            }
+            marker
+        }
+    }
+
+    impl Marker for MarkerTwo {
+        fn advance(&mut self, positions: usize) {
+            let mut cached = [0; ELEMENTS];
+            cached.copy_from_slice(&self.0[positions..ELEMENTS + positions]);
+            self.0[..ELEMENTS].copy_from_slice(&cached)
+        }
+        fn content(&mut self) -> &mut [u8] {
+            &mut self.0
+        }
+        fn size(&self) -> usize {
+            SIZE
+        }
+        fn elements(&self) -> usize {
+            ELEMENTS
+        }
+    }
+}
+
+/// Marker to find the code
+trait Marker {
+    /// Advances the elements n positions
+    fn advance(&mut self, positions: usize);
+    fn content(&mut self) -> &mut [u8];
+    fn elements(&self) -> usize;
+    fn size(&self) -> usize;
+
+    /// Tries to add the value to the array, if it fails (the array is full) then return false, otherwise returns true
+    fn add(&mut self, new: u8) -> bool {
+        for i in 0..self.size() - 1 {
+            if self.content()[i] == 0 {
+                self.content()[i] = new;
+                return true;
+            }
+        }
+        false
+    }
+
+    /// Send the byte to the marker, it returns `true` if the push was succesful and false otherwise
+    /// The push can fail if the Marker is full and there's no value equal to the given one
+    fn push(&mut self, new: u8) -> bool {
+        for i in (0..self.size()).rev() {
+            if self.content()[i] == new {
+                self.advance(i + 1);
+                break;
+            }
+        }
+        self.add(new)
+    }
+}
+
+fn find_mark(input: Input, marker: &mut impl Marker) -> Solution {
+    for (i, b) in input[marker.elements()..].iter().enumerate() {
+        if !marker.push(*b) {
+            return Some(i + marker.size());
+        }
+    }
+    None
 }
 
 pub fn part_one(input: Input) -> Solution {
-	let mut marker = Marker::init(&input[..3]);	
-
-	for (i, b) in input[SAVED_ELEMENTS..].iter().enumerate() {
-		if !marker.push(*b) {
-			return Some(i + MARKER_SIZE);
-		}
-	}
-	None
+    let mut marker = part_one::MarkerOne::init(input);
+    find_mark(input, &mut marker)
 }
 
 pub fn part_two(input: Input) -> Solution {
-    None
+    let mut marker = part_two::MarkerTwo::init(input);
+    find_mark(input, &mut marker)
 }
 
 fn main() -> AocResult<()> {
     let input = advent_of_code::read_file(Folder::Inputs, DAY);
     advent_of_code::solve!(1, part_one, input.as_bytes());
     advent_of_code::solve!(2, part_two, input.as_bytes());
-	Ok(())
+    Ok(())
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::part_one::MarkerOne;
+
     use super::*;
 
-	const EXTRA_EXAMPLES: [(&[u8], usize); 4] = [
-		("bvwbjplbgvbhsrlpgdmjqwftvncz".as_bytes(), 5),
-		("nppdvjthqldpwncqszvftbrmjlhg".as_bytes(), 6),
-		("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg".as_bytes(), 10),
-		("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw".as_bytes(), 11),
-	];
+    const EXTRA_EXAMPLES: [(&[u8], usize, usize); 4] = [
+        ("bvwbjplbgvbhsrlpgdmjqwftvncz".as_bytes(), 5, 23),
+        ("nppdvjthqldpwncqszvftbrmjlhg".as_bytes(), 6, 23),
+        ("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg".as_bytes(), 10, 29),
+        ("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw".as_bytes(), 11, 26),
+    ];
 
     #[test]
     fn test_part_one() {
         let input = advent_of_code::read_file(Folder::Examples, DAY);
         assert_eq!(part_one(&input.as_bytes()), Some(7));
-		for (input, expected) in EXTRA_EXAMPLES {
-			assert_eq!(part_one(&input), Some(expected));
-		}
+        for (input, expected, _) in EXTRA_EXAMPLES {
+            assert_eq!(part_one(&input), Some(expected));
+        }
     }
-	
+
     #[test]
     fn test_part_two() {
-		let input = advent_of_code::read_file(Folder::Inputs, DAY);
-        assert_eq!(part_two(&input.as_bytes()), None);
+        let input = advent_of_code::read_file(Folder::Examples, DAY);
+        assert_eq!(part_two(&input.as_bytes()), Some(19));
+        for (input, _, expected) in EXTRA_EXAMPLES {
+            assert_eq!(part_two(&input), Some(expected));
+        }
     }
 
-	#[test]
-	fn test_marker_init() {
-		assert_eq!([b'm', b'j', b'q', 0, 0, 0], Marker::init(&[b'm', b'j', b'q']).0);
-		assert_eq!([b'j', 0, 0, 0, 0, 0], Marker::init(&[b'm', b'j', b'j']).0);
-	}
+    #[test]
+    fn test_marker_push() {
+        let mut marker = MarkerOne::init(&[b'a', b'b', b'c']);
+        assert!(marker.push(b'b'));
+        assert_eq!([b'c', b'b', 0, 0, 0, 0], marker.content());
+        assert!(marker.push(b'b'));
+        assert_eq!([b'b', 0, 0, 0, 0, 0], marker.content());
+        assert!(marker.push(b'c'));
+        assert!(marker.push(b'd'));
+        assert_eq!([b'b', b'c', b'd', 0, 0, 0], marker.content());
+        assert!(!marker.push(b'e'));
+        assert_eq!([b'b', b'c', b'd', 0, 0, 0], marker.content());
+    }
 
-	#[test]
-	fn test_marker_push() {
-		let mut marker = Marker::init(&[b'a', b'b', b'c']);
-		assert!(marker.push(b'b'));
-		assert_eq!([b'c', b'b', 0, 0, 0, 0], marker.0);
-		assert!(marker.push(b'b'));
-		assert_eq!([b'b', 0, 0, 0, 0, 0], marker.0);
-		assert!(marker.push(b'c'));
-		assert!(marker.push(b'd'));
-		assert_eq!([b'b', b'c', b'd', 0, 0, 0], marker.0);
-		assert!(!marker.push(b'e'));
-		assert_eq!([b'b', b'c', b'd', 0, 0, 0], marker.0);
-		
-	}
-
-	#[test]
-	fn test_marker_advance() {
-		let mut marker = Marker::init(&[b'm', b'j', b'q']);
-		marker.advance(1);
-		assert_eq!([b'j', b'q', 0, 0, 0, 0], marker.0);
-		marker.advance(1);
-		assert_eq!([b'q', 0, 0, 0, 0, 0], marker.0);
-		let mut marker = Marker::init(&[b'm', b'j', b'q']);
-		marker.advance(3);
-		assert_eq!([0, 0, 0, 0, 0, 0], marker.0);
-	}
-
+    #[test]
+    fn test_marker_advance() {
+        let mut marker = MarkerOne::init(&[b'm', b'j', b'q']);
+        marker.advance(1);
+        assert_eq!([b'j', b'q', 0, 0, 0, 0], marker.content());
+        marker.advance(1);
+        assert_eq!([b'q', 0, 0, 0, 0, 0], marker.content());
+        let mut marker = MarkerOne::init(&[b'm', b'j', b'q']);
+        marker.advance(3);
+        assert_eq!([0, 0, 0, 0, 0, 0], marker.content());
+    }
 }

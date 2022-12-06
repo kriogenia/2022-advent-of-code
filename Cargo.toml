@@ -3,8 +3,8 @@ name = "advent_of_code"
 version = "0.8.0"
 authors = [
 	"Soto Estévez <ricardo@sotoestevez.dev",
-	"Felix Spöttel <1682504+fspoettel@users.noreply.github.com>"
-	]
+	"Felix Spöttel <1682504+fspoettel@users.noreply.github.com>",
+]
 edition = "2021"
 default-run = "advent_of_code"
 publish = false
