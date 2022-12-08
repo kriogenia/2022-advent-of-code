@@ -8,6 +8,8 @@ type Solution = Option<u32>;
 type ElementCell = Rc<RefCell<Element>>;
 
 const THRESHOLD: u32 = 100_000;
+const TOTAL_DISK_SPACE: u32 = 70_000_000;
+const REQUIRED_DISK_SPACE: u32 = 30_000_000;
 
 pub enum Line {
     CdBack,
@@ -128,6 +130,23 @@ impl Element {
             0
         }
     }
+
+    fn depth_first_size_search(&self, size_filter: &impl Fn(u32) -> bool) -> Option<u32> {
+        if let Class::Directory(content) = &self.class {
+            let min = content
+                .iter()
+                .filter_map(|e| e.deref().borrow().depth_first_size_search(size_filter))
+                .min();
+            let size = self.size();
+			match min {
+                Some(value) if value < size => Some(value),
+                None if size_filter(size) => Some(size),
+                _ => None,
+            }
+        } else {
+            None
+        }
+    }
 }
 
 fn build_filesystem(input: &[Line]) -> Element {
@@ -171,7 +190,10 @@ pub fn part_one(input: Input) -> Solution {
 }
 
 pub fn part_two(input: Input) -> Solution {
-	None
+    let used_disk_space = input.size();
+	let disk_space_to_free = used_disk_space - (TOTAL_DISK_SPACE - REQUIRED_DISK_SPACE);
+    let filter = |s| s > disk_space_to_free;
+    Some(input.depth_first_size_search(&filter).expect("a solution for the exercise"))
 }
 
 fn main() -> AocResult<()> {
@@ -197,6 +219,6 @@ mod tests {
     fn test_part_two() {
         let input = &advent_of_code::helpers::read_input(Folder::Examples, DAY).unwrap();
 		let file_tree = build_filesystem(input);
-        assert_eq!(part_two(&file_tree), None);
+        assert_eq!(part_two(&file_tree), Some(24933642));
     }
 }
