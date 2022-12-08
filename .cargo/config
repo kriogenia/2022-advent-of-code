@@ -4,3 +4,4 @@ download = "run --bin download -- "
 
 solve = "run --bin"
 all = "run"
+macro = "expand --bin"
