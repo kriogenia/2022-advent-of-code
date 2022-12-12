@@ -5,13 +5,11 @@ const DAY: u8 = 9;
 type Input<'a> = &'a [Line];
 type Solution = Option<usize>;
 
-#[derive(Debug)]
 pub struct Line {
     direction: Direction,
     movements: u8,
 }
 
-#[derive(Debug)]
 enum Direction {
     Up,
     Right,
@@ -49,7 +47,7 @@ impl TryFrom<&str> for Direction {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Eq, Hash, PartialEq)]
 struct Position(i32, i32); // (horizontal, vertical)
 
 impl Position {
@@ -66,9 +64,9 @@ impl Position {
         }
     }
 
-    fn adjust_to(&mut self, head: &Self, visited: &mut HashSet<Self>) {
-        let horizontal_gap = head.0 - self.0;
-        let vertical_gap = head.1 - self.1;
+    fn adjust_to(&mut self, leader: Self) {
+        let horizontal_gap = leader.0 - self.0;
+        let vertical_gap = leader.1 - self.1;
 
         if matches!(horizontal_gap, -1..=1) && matches!(vertical_gap, -1..=1) {
             return;
@@ -76,9 +74,8 @@ impl Position {
 
         match horizontal_gap {
             0 => {}
-            1 | 2 => self.move_one(&Direction::Right),
-            -1 | -2 => self.move_one(&Direction::Left),
-            _ => unreachable!("the maximum distance is two steps in any direction"),
+            1.. => self.move_one(&Direction::Right),
+            _ => self.move_one(&Direction::Left),
         }
 
         match vertical_gap {
@@ -87,30 +84,39 @@ impl Position {
             -1 | -2 => self.move_one(&Direction::Down),
             _ => unreachable!("the maximum distance is two steps in any direction"),
         }
-
-        visited.insert(*self);
     }
 }
 
-pub fn part_one(input: Input) -> Solution {
-    let mut head = Position::new();
-    let mut tail = Position::new();
+impl Default for Position {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
-    let mut visited = HashSet::new();
-    visited.insert(tail);
+fn run<const LENGTH: usize>(input: Input, mut rope: [Position; LENGTH]) -> Solution {
+	let mut visited = HashSet::new();
+    visited.insert(rope[LENGTH - 1]);
 
     for line in input {
         for _ in 0..line.movements {
-            head.move_one(&line.direction);
-            tail.adjust_to(&head, &mut visited);
+			rope[0].move_one(&line.direction);
+			for n in 1..LENGTH {
+				rope[n].adjust_to(rope[n - 1]);
+			}
+			visited.insert(rope[LENGTH - 1]);
         }
     }
-    assert!(visited.len() == 5779);
     Some(visited.len())
 }
 
+pub fn part_one(input: Input) -> Solution {
+	let rope: [Position; 2] = Default::default();
+    run(input, rope)
+}
+
 pub fn part_two(input: Input) -> Solution {
-    None
+	let rope: [Position; 10] = Default::default();
+    run(input, rope)
 }
 
 fn main() -> AocResult<()> {
@@ -133,6 +139,21 @@ mod tests {
     #[test]
     fn test_part_two() {
         let input = advent_of_code::helpers::read_input(Folder::Examples, DAY).unwrap();
-        assert_eq!(part_two(&input), None);
+        assert_eq!(part_two(&input), Some(1));
     }
+
+	#[test]
+	fn test_part_two_example_two() {
+		let input = vec![
+			Line::from_str("R 5").unwrap(),
+			Line::from_str("U 8").unwrap(),
+			Line::from_str("L 8").unwrap(),
+			Line::from_str("D 3").unwrap(),
+			Line::from_str("R 17").unwrap(),
+			Line::from_str("D 10").unwrap(),
+			Line::from_str("L 25").unwrap(),
+			Line::from_str("U 20").unwrap(),
+		];
+		assert_eq!(part_two(&input), Some(36));
+	}
 }
