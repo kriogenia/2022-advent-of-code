@@ -20,8 +20,9 @@ The following times were recorded in my local machine. Parsing time is usually c
 | **Day 07** | 37.72µs    | 32.90µs    |
 | **Day 08** | 31.50µs    | 225.73µs   |
 | **Day 09** | 864.36µs   | 969.82µs   |
+| **Day 10** | 1.40µs     | 11.66µs    |
 
-Total running time for all days and parts: 2.93ms (at the moment).
+Total running time for all days and parts: 3.00ms (at the moment).
 
 ## Some thoughs
 * The template of *fspoettel* is awesome but I tweaked a bit to match my intentions, like parsing the input just once for both parts if it's possible.
@@ -33,3 +34,5 @@ Total running time for all days and parts: 2.93ms (at the moment).
 * I was trying to make some weird things to solve **Day 07** instead of the logic approaches and that made me lose a lot of time. I was actually defeated the first day and had to left it to the next. It was easy with the obvious approach. 
 * For **Day 08** I looked the size of the grid manually to use arrays. I see it as part of the optimization, sorry not sorry. To deal with the difference between the example and input I used the `[cfg()]` macro and it worked wonders. Macros were also a big part of this day.
 * At last, in **Day 09** const generics made an appearance. It's a wonderful tool for these type of exercises where you sometimes need to work with different sizes and don't want to use Vec. I also had to use `Copy` for the first time.
+* My little experience with emulation was a good help for **Day 10**.
+* The actual computation of **Day 10** is solely based on the input preparation so I really need to create the measurement for the loading part.

@@ -1,11 +1,14 @@
 use advent_of_code::helpers::{AocResult, Folder};
-use std::str::FromStr;
+use std::{io::Write, str::FromStr};
 
 const DAY: u8 = 10;
-type Input<'a> = &'a [Instruction];
+type Input<'a> = &'a Device;
 type Solution = Option<i16>;
 
-#[derive(Debug)]
+const TOTAL_LINES: usize = 6;
+const LINE_SIZE: usize = 40;
+const TOTAL_CYCLES: usize = TOTAL_LINES * LINE_SIZE;
+
 pub enum Instruction {
     Noop,
     Addx(i16),
@@ -27,87 +30,96 @@ impl FromStr for Instruction {
     }
 }
 
-struct Cpu {
-    pc: u16,
+pub struct Device {
+    pc: i16,
     vx: i16,
-    busy: u16,
+    sleep_flag: bool,
     to_add: i16,
-    signal_strength: i16,
+    ssc: i16, // signal strength counter
+    display_buffer: [u8; TOTAL_CYCLES],
 }
 
-impl Cpu {
+impl Device {
     fn new() -> Self {
         Self {
             pc: 0,
             vx: 1,
-            busy: 0,
+            sleep_flag: false,
             to_add: 0,
-            signal_strength: 0,
+            ssc: 0,
+            display_buffer: [0; TOTAL_CYCLES],
         }
     }
 
-    fn run(&mut self, instructions: Input) {
+    fn run(&mut self, instructions: &[Instruction]) {
         let mut iter = instructions.iter();
         loop {
-            self.pc += 1;
-            if self.pc % 40 == 20 {
-                self.signal_strength += self.vx * self.pc as i16
+            if self.pc >= TOTAL_CYCLES as i16 {
+                return;
             }
 
-            //println!("Cycle {}, X: {}", self.pc, self.vx);
-            match self.busy {
-                0 => match iter.next() {
-                    Some(instruction) => self.execute(instruction),
-                    None => return,
-                },
-                1 => self.awake(),
-                _ => unreachable!("max busy is 1"), // todo change to bool?
-                                                    //2.. => self.sleep()
+            self.display_buffer[self.pc as usize] = match self.pc % 40 - self.vx {
+                -1..=1 => b'#',
+                _ => b'.',
+            };
+
+            self.pc += 1;
+
+            if self.pc % 40 == 20 {
+                self.ssc += self.vx * self.pc
             }
+
+            if self.sleep_flag {
+                self.awake();
+            } else if let Some(instruction) = iter.next() {
+                self.execute(instruction);
+            };
         }
     }
 
     fn execute(&mut self, instruction: &Instruction) {
-        //println!("Run: {instruction:?}");
         match instruction {
             Instruction::Noop => {
                 self.to_add = 0;
             }
             Instruction::Addx(x) => {
-                self.busy = 1;
+                self.sleep_flag = true;
                 self.to_add = *x;
             }
         };
     }
 
     fn awake(&mut self) {
-        self.busy = 0;
+        self.sleep_flag = false;
         self.vx += self.to_add;
-        //println!("Awakening. Adding {}. X: {}", self.to_add, self.vx);
     }
-    /*
-        fn sleep(&mut self) {
-            println!("Sleeping. Busy: {}", self.busy);
-            self.busy -= 1;
-        }
-    */
 }
 
-pub fn part_one(input: Input) -> Solution {
-    let mut cpu = Cpu::new();
-    cpu.run(input);
-    Some(cpu.signal_strength)
+pub fn part_one(cpu: Input) -> Solution {
+    Some(cpu.ssc)
 }
 
-pub fn part_two(input: Input) -> Solution {
-    None
+pub fn part_two(cpu: Input) -> Solution {
+    let buffer = &cpu.display_buffer;
+    let mut out = std::io::stdout();
+    for i in 0..TOTAL_LINES {
+        out.write_all(&buffer[i * LINE_SIZE..(i * LINE_SIZE + LINE_SIZE)])
+            .unwrap();
+        out.write_all(&[b'\n']).unwrap();
+    }
+    out.flush().unwrap();
+    Some(1) // not the actual answer, placeholder to measure the execution
 }
 
 fn main() -> AocResult<()> {
     let input = advent_of_code::helpers::read_input(Folder::Inputs, DAY)?;
-    //let input = &advent_of_code::read_file("inputs", DAY);				// if you want just the string
-    advent_of_code::solve!(1, part_one, &input);
-    advent_of_code::solve!(2, part_two, &input);
+
+    let mut cpu = Device::new();
+    cpu.run(&input);
+
+    advent_of_code::solve!(1, part_one, &cpu);
+    advent_of_code::solve!(2, part_two, &cpu);
+
     Ok(())
 }
 
@@ -118,27 +130,8 @@ mod tests {
     #[test]
     fn test_part_one() {
         let input = advent_of_code::helpers::read_input(Folder::Examples, DAY).unwrap();
-        assert_eq!(part_one(&input), Some(13140));
-    }
-
-    #[test]
-    fn test_part_two() {
-        let input = advent_of_code::helpers::read_input(Folder::Examples, DAY).unwrap();
-        assert_eq!(part_two(&input), None);
-    }
-
-    #[test]
-    fn test_cpu_cycle() {
-        let instructions = vec![
-            Instruction::Noop,
-            Instruction::Addx(3),
-            Instruction::Addx(-5),
-        ];
-
-        let mut cpu = Cpu::new();
-        cpu.run(&instructions);
-
-        assert_eq!(6, cpu.pc);
-        assert_eq!(0, cpu.busy);
+        let mut cpu = Device::new();
+        cpu.run(&input);
+        assert_eq!(part_one(&cpu), Some(13140));
     }
 }
