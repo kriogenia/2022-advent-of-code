@@ -36,3 +36,4 @@ Total running time for all days and parts: **3.42ms** (at the moment).
 * At last, in **Day 09** const generics made an appearance. It's a wonderful tool for these type of exercises where you sometimes need to work with different sizes and don't want to use Vec. I also had to use `Copy` for the first time.
 * My little experience with emulation was a good help for **Day 10**.
 * The actual computation of **Day 10** is solely based on the input preparation so I really need to create the measurement for the loading part.
+* I actually enjoyed the complex parsing required on **Day 11**.
