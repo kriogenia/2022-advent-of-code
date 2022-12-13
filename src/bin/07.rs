@@ -197,10 +197,14 @@ pub fn part_two(input: Input) -> Solution {
 }
 
 fn main() -> AocResult<()> {
-    let input = &advent_of_code::helpers::read_input(Folder::Inputs, DAY)?;
-    let file_tree = build_filesystem(input);
-    advent_of_code::solve!(1, part_one, &file_tree);
-    advent_of_code::solve!(2, part_two, &file_tree);
+	let setup = || {
+        let input = &advent_of_code::helpers::read_input(Folder::Inputs, DAY)?;
+    	Ok(build_filesystem(input))
+    };
+
+    let input = advent_of_code::load!(setup)?;
+    advent_of_code::solve!(1, part_one, &input);
+    advent_of_code::solve!(2, part_two, &input);
     Ok(())
 }
 

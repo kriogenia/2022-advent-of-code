@@ -9,20 +9,20 @@ This repository uses a template of [fspoettel](https://github.com/fspoettel/adve
 
 The following times were recorded in my local machine. Parsing time is usually considered out of the equation but I will probably update the code to add that measuring too.
 
-|            | **Part 1** | **Part 2** |
-|------------|------------|------------|
-| **Day 01** | 8.03µs     | 22.28µs    | 
-| **Day 02** | 35.27µs    | 36.60µs    |
-| **Day 03** | 208.27µs   | 207.92µs   |
-| **Day 04** | 2.86µs     | 1.89µs     |
-| **Day 05** | 23.96µs    | 64.81µs    |
-| **Day 06** | 14.74µs    | 29.75µs    |
-| **Day 07** | 37.72µs    | 32.90µs    |
-| **Day 08** | 31.50µs    | 225.73µs   |
-| **Day 09** | 864.36µs   | 969.82µs   |
-| **Day 10** | 1.40µs     | 11.66µs    |
+|            | **Set-up** | **Part 1** | **Part 2** | **Total** |
+|------------|------------|------------|------------|-----------|
+| **Day 01** | 159.31µs   | 8.03µs     | 16.83µs    | 184.17µs  |
+| **Day 02** | 71.94µs    | 29.82µs    | 31.50µs    | 133.26µs  |
+| **Day 03** | 27.59µs    | 189.48µs   | 195.84µs   | 412.81µs  |
+| **Day 04** | 220.14µs   | 2.86µs     | 1.89µs     | 224.89µs  |
+| **Day 05** | 81.02µs    | 13.97µs    | 32.48µs    | 127.37µs  |
+| **Day 06** | 16.90µs    | 8.94µs     | 18.58µs    | 44.42µs   |
+| **Day 07** | 266.52µs   | 23.89µs    | 31.92µs    | 322.33µs  |
+| **Day 08** | 37.99µs    | 30.38µs    | 225.73µs   | 294.10µs  |
+| **Day 09** | 120.69µs   | 728.38µs   | 794.59µs   | 1643.66µs |
+| **Day 10** | 25.28µs    | 908.00ns   | 4.82µs     | 31.01µs   |
 
-Total running time for all days and parts: 3.00ms (at the moment).
+Total running time for all days and parts: **3.42ms** (at the moment).
 
 ## Some thoughs
 * The template of *fspoettel* is awesome but I tweaked a bit to match my intentions, like parsing the input just once for both parts if it's possible.

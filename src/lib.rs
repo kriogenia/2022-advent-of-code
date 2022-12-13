@@ -43,6 +43,30 @@ macro_rules! solve {
     }};
 }
 
+#[macro_export]
+macro_rules! load {
+    ($loader:ident) => {{
+        use advent_of_code::{ANSI_BOLD, ANSI_ITALIC, ANSI_RESET};
+		use advent_of_code::helpers::AocResult;
+        use std::fmt::Display;
+        use std::time::Instant;
+
+        fn print_result<I>(func: impl FnOnce() -> AocResult<I>) -> AocResult<I> {
+            let timer = Instant::now();
+            let input = func();
+            let elapsed = timer.elapsed();
+			println!(
+				"{}(elapsed: {:.2?}){}",
+				ANSI_ITALIC, elapsed, ANSI_RESET
+			);
+			input
+        }
+
+        println!("🎄 {}Set-up{} 🎄", ANSI_BOLD, ANSI_RESET);
+        print_result($loader)
+    }};
+}
+
 pub fn read_file(folder: Folder, day: u8) -> String {
     let cwd = env::current_dir().unwrap();
 

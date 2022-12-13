@@ -128,8 +128,12 @@ pub fn part_two(heights: &Grid<u8>) -> Solution {
 }
 
 fn main() -> AocResult<()> {
-    let input = advent_of_code::read_file(Folder::Inputs, DAY);
-    let (heights, mut visibility) = init_grids(input);
+	let setup = || {
+        let input = advent_of_code::read_file(Folder::Inputs, DAY);
+    	Ok(init_grids(input))
+    };
+
+    let (heights, mut visibility) = advent_of_code::load!(setup)?;
     advent_of_code::solve!(1, part_one, (&heights, &mut visibility));
     advent_of_code::solve!(2, part_two, &heights);
     Ok(())

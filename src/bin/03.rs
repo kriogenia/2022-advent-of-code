@@ -3,7 +3,7 @@ use std::{collections::HashMap};
 use advent_of_code::helpers::Folder;
 
 const DAY: u8 = 3;
-type Input<'a> = &'a str;
+type Input<'a> = &'a String;
 type Solution = Option<u32>;
 
 const ELVES_PER_GROUP: usize = 3;
@@ -75,9 +75,13 @@ pub fn part_two(input: Input) -> Solution {
 }
 
 fn main() {
-    let input = &advent_of_code::read_file(Folder::Inputs, DAY);
-    advent_of_code::solve!(1, part_one, input);
-    advent_of_code::solve!(2, part_two, input);
+	let setup = || {
+        Ok(advent_of_code::read_file(Folder::Inputs, DAY))
+    };
+
+    let input = advent_of_code::load!(setup).expect("no problem during file load");
+    advent_of_code::solve!(1, part_one, &input);
+    advent_of_code::solve!(2, part_two, &input);
 }
 
 #[cfg(test)]

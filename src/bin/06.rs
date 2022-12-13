@@ -134,7 +134,11 @@ pub fn part_two(input: Input) -> Solution {
 }
 
 fn main() -> AocResult<()> {
-    let input = advent_of_code::read_file(Folder::Inputs, DAY);
+	let setup = || {
+        Ok(advent_of_code::read_file(Folder::Inputs, DAY))
+    };
+
+    let input = advent_of_code::load!(setup)?;
     advent_of_code::solve!(1, part_one, input.as_bytes());
     advent_of_code::solve!(2, part_two, input.as_bytes());
     Ok(())
