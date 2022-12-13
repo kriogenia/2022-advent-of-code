@@ -9,20 +9,21 @@ This repository uses a template of [fspoettel](https://github.com/fspoettel/adve
 
 The following times were recorded in my local machine. Parsing time is usually considered out of the equation but I will probably update the code to add that measuring too.
 
-|            | **Set-up** | **Part 1** | **Part 2** | **Total** |
-|------------|------------|------------|------------|-----------|
-| **Day 01** | 159.31µs   | 8.03µs     | 16.83µs    | 184.17µs  |
-| **Day 02** | 71.94µs    | 29.82µs    | 31.50µs    | 133.26µs  |
-| **Day 03** | 27.59µs    | 189.48µs   | 195.84µs   | 412.81µs  |
-| **Day 04** | 220.14µs   | 2.86µs     | 1.89µs     | 224.89µs  |
-| **Day 05** | 81.02µs    | 13.97µs    | 32.48µs    | 127.37µs  |
-| **Day 06** | 16.90µs    | 8.94µs     | 18.58µs    | 44.42µs   |
-| **Day 07** | 266.52µs   | 23.89µs    | 31.92µs    | 322.33µs  |
-| **Day 08** | 37.99µs    | 30.38µs    | 225.73µs   | 294.10µs  |
-| **Day 09** | 120.69µs   | 728.38µs   | 794.59µs   | 1643.66µs |
-| **Day 10** | 25.28µs    | 908.00ns   | 4.82µs     | 31.01µs   |
+|            | **Set-up** | **Part 1** | **Part 2** | **Total**  |
+|------------|------------|------------|------------|------------|
+| **Day 01** | 159.31µs   | 8.03µs     | 16.83µs    | 184.17µs   |
+| **Day 02** | 71.94µs    | 29.82µs    | 31.50µs    | 133.26µs   |
+| **Day 03** | 27.59µs    | 189.48µs   | 195.84µs   | 412.81µs   |
+| **Day 04** | 220.14µs   | 2.86µs     | 1.89µs     | 224.89µs   |
+| **Day 05** | 81.02µs    | 13.97µs    | 32.48µs    | 127.37µs   |
+| **Day 06** | 16.90µs    | 8.94µs     | 18.58µs    | 44.42µs    |
+| **Day 07** | 266.52µs   | 23.89µs    | 31.92µs    | 322.33µs   |
+| **Day 08** | 37.99µs    | 30.38µs    | 225.73µs   | 294.10µs   |
+| **Day 09** | 120.69µs   | 728.38µs   | 794.59µs   | 1643.66µs  |
+| **Day 10** | 25.28µs    | 908.00ns   | 4.82µs     | 31.01µs    |
+| **Day 11** | 39.67µs    | 65.44µs    | 27.86ms    | 27965.11µs |
 
-Total running time for all days and parts: **3.42ms** (at the moment).
+Total running time for all days and parts: **32.41ms** (at the moment, 90% of that is **Day 11**).
 
 ## Some thoughs
 * The template of *fspoettel* is awesome but I tweaked a bit to match my intentions, like parsing the input just once for both parts if it's possible.
@@ -36,4 +37,4 @@ Total running time for all days and parts: **3.42ms** (at the moment).
 * At last, in **Day 09** const generics made an appearance. It's a wonderful tool for these type of exercises where you sometimes need to work with different sizes and don't want to use Vec. I also had to use `Copy` for the first time.
 * My little experience with emulation was a good help for **Day 10**.
 * The actual computation of **Day 10** is solely based on the input preparation so I really need to create the measurement for the loading part.
-* I actually enjoyed the complex parsing required on **Day 11**.
+* I actually enjoyed the complex parsing required on **Day 11** and then complex deduction needed.

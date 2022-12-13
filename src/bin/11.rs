@@ -1,10 +1,11 @@
-use std::{str::FromStr, collections::{HashMap, VecDeque}};
+use std::{str::FromStr, collections::HashMap};
 
 use advent_of_code::helpers::{AocResult, Folder};
 
 const DAY: u8 = 11;
 type Input<'a> = &'a mut [Monkey];
-type Solution = Option<u32>;
+type Solution = Option<usize>;
+type Ux = u64;
 
 const STARTING_ITEMS_LIST_POINTER: usize = 18;
 const OP_DECLARATION_POINTER: usize = 19;
@@ -12,36 +13,30 @@ const TEST_NUMBER_POINTER: usize = 21;
 const IF_TRUE_INDEX_POINTER: usize = 29;
 const IF_FALSE_INDEX_POINTER: usize = 30;
 
-const ROUNDS: usize = 20;
-
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Monkey {
-    items: VecDeque<u32>,
+    items: Vec<Ux>,
     op: Operation,
-    test: u32,
-    destiny_if_true: usize,
-    destiny_if_false: usize,
-	play_count: u32,
+    test: Ux,
+    on_ok: usize,
+    on_fail: usize,
+	play_count: usize,
 }
 
 impl Monkey {
-	fn pop(&mut self) -> Option<u32> {
-		self.items.pop_front()
-	}
-
-	fn push(&mut self, item: u32) {
-		self.items.push_back(item);
+	fn push(&mut self, item: Ux) {
+		self.items.push(item);
 	}
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 enum Operation {
     Sum(Value, Value),
     Mul(Value, Value),
 }
 
 impl Operation {
-    fn run(&self, value: u32) -> u32 {
+    fn run(&self, value: Ux) -> Ux {
         match self {
             Self::Sum(left, right) => left.get(value) + right.get(value),
             Self::Mul(left, right) => left.get(value) * right.get(value),
@@ -68,14 +63,14 @@ impl TryFrom<&str> for Operation {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 enum Value {
     Old,
-    Literal(u32),
+    Literal(Ux),
 }
 
 impl Value {
-    fn get(&self, or: u32) -> u32 {
+    fn get(&self, or: Ux) -> Ux {
         match self {
             Self::Old => or,
             Self::Literal(value) => *value,
@@ -92,38 +87,38 @@ impl TryFrom<Option<&str>> for Value {
             Some(number) => Ok(Value::Literal(
                 number.parse().map_err(|_| format!("invalid: {number}"))?,
             )),
-            None => return Err(format!("missing")),
+            None => Err("missing".to_string()),
         }
     }
 }
 
-fn parse_monkeys(input: &String) -> AocResult<Vec<Monkey>> {
+fn parse_monkeys(input: &str) -> AocResult<Vec<Monkey>> {
     let mut monkeys = Vec::new();
     let mut iter = input.lines();
     loop {
-        if let None = iter.next() {
+        if iter.next().is_none() {
             break; // monkeys are declared sequentially so we don't care about their hread
         }
         let items = parse_items(
             iter.next()
-                .ok_or("Missing starting items line".to_string())?,
+                .ok_or_else(|| "Missing starting items line".to_string())?,
         )?;
         let op = iter
             .next()
-            .ok_or("Missing operation line".to_string())?
+            .ok_or_else(|| "Missing operation line".to_string())?
             .try_into()?;
         let test = parse_number(iter.next(), TEST_NUMBER_POINTER)
             .map_err(|e| format!("Invalid test line: {e}"))?;
-        let destiny_if_true = parse_number(iter.next(), IF_TRUE_INDEX_POINTER)
+        let on_ok = parse_number(iter.next(), IF_TRUE_INDEX_POINTER)
             .map_err(|e| format!("Invalid condition true line: {e}"))?;
-        let destiny_if_false = parse_number(iter.next(), IF_FALSE_INDEX_POINTER)
+        let on_fail = parse_number(iter.next(), IF_FALSE_INDEX_POINTER)
             .map_err(|e| format!("Invalid condition false line: {e}"))?;
         monkeys.push(Monkey {
             items,
             op,
             test,
-            destiny_if_true,
-            destiny_if_false,
+            on_ok,
+            on_fail,
 			play_count: 0,
         });
         iter.next(); // jump empty line
@@ -131,11 +126,10 @@ fn parse_monkeys(input: &String) -> AocResult<Vec<Monkey>> {
     Ok(monkeys)
 }
 
-fn parse_items(line: &str) -> AocResult<VecDeque<u32>> {
-    let mut items = VecDeque::new();
-    let mut numbers = line.split_at(STARTING_ITEMS_LIST_POINTER).1.split(", ");
-    while let Some(value) = numbers.next() {
-        items.push_back(
+fn parse_items(line: &str) -> AocResult<Vec<Ux>> {
+    let mut items = Vec::new();
+    for value in line.split_at(STARTING_ITEMS_LIST_POINTER).1.split(", ") {
+        items.push(
             value
                 .parse()
                 .map_err(|_| format!("invalid item: {value}"))?,
@@ -146,32 +140,34 @@ fn parse_items(line: &str) -> AocResult<VecDeque<u32>> {
 
 fn parse_number<T: FromStr>(line: Option<&str>, split: usize) -> AocResult<T> {
     line.map(|s| s.split_at(split).1)
-        .ok_or("missing".to_string())?
+        .ok_or_else(|| "missing".to_string())?
         .parse()
         .map_err(|_| "failed parsing".to_string())
 }
 
-pub fn part_one(monkeys: Input) -> Solution {
+fn solve<const ROUNDS: usize, const RELIEF: Ux>(monkeys: Input) -> Solution {
 	let mut sent = HashMap::new();
 	for i in 0..monkeys.len() {
-		sent.insert(i, VecDeque::new());
+		sent.insert(i, Vec::new());
 	}
+
+	let mcd: Ux = monkeys.iter().map(|m| m.test).product();
 
     for _ in 0..ROUNDS {
 		for (i, monkey) in monkeys.iter_mut().enumerate() {
-			while let Some(item) = sent.get_mut(&i).unwrap().pop_front() {
+			 for item in sent.get_mut(&i).unwrap().drain(..) {
 				monkey.push(item);
 			}
 	
-			while let Some(item) = monkey.pop() {
-				monkey.play_count += 1;
-				let worry_level = monkey.op.run(item) / 3;
+			monkey.play_count += monkey.items.len();
+			for item in monkey.items.drain(..) {
+				let worry_level = (monkey.op.run(item) % mcd) / RELIEF;
 				let destiny = if worry_level % monkey.test == 0 {
-					monkey.destiny_if_true
+					monkey.on_ok
 				} else {
-					monkey.destiny_if_false
+					monkey.on_fail
 				};
-				sent.get_mut(&destiny).unwrap().push_back(worry_level);
+				sent.get_mut(&destiny).unwrap().push(worry_level);
 			}
 		}
 	}
@@ -180,19 +176,24 @@ pub fn part_one(monkeys: Input) -> Solution {
     Some(monkeys[0].play_count * monkeys[1].play_count)
 }
 
+pub fn part_one(input: Input) -> Solution {
+	solve::<20, 3>(input)
+}
+
 pub fn part_two(input: Input) -> Solution {
-    None
+    solve::<10_000, 1>(input)
 }
 
 fn main() -> AocResult<()> {
     let setup = || {
         let input = advent_of_code::read_file(Folder::Inputs, DAY);
-        parse_monkeys(&input)
+        let monkeys = parse_monkeys(&input)?;
+		Ok((monkeys.clone(), monkeys))
     };
 
     let mut input = advent_of_code::load!(setup)?;
-    advent_of_code::solve!(1, part_one, &mut input);
-    advent_of_code::solve!(2, part_two, &mut input);
+    advent_of_code::solve!(1, part_one, &mut input.0);
+    advent_of_code::solve!(2, part_two, &mut input.1);
     Ok(())
 }
 
@@ -211,6 +212,6 @@ mod tests {
     fn test_part_two() {
         let input = advent_of_code::read_file(Folder::Examples, DAY);
         let mut input = parse_monkeys(&input).unwrap();
-        assert_eq!(part_two(&mut input), None);
+        assert_eq!(part_two(&mut input), Some(2713310158));
     }
 }
