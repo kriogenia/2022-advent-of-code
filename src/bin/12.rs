@@ -20,7 +20,6 @@ const GRID_HEIGHT: usize = 5;
 #[cfg(not(test))]
 const GRID_HEIGHT: usize = 41;
 
-// todo override eq and partial -> only matters position
 #[derive(Clone, Copy, Debug, Eq)]
 struct Vertex {
     position: Position, //(line, column)
@@ -66,6 +65,8 @@ impl VertexHeap {
         }
     }
 
+	/// Attempts to add all the positions to the heap, if they're already present it just updates them
+	/// if the new distance is better
     fn push_all(&mut self, distance: Distance, positions: Vec<Position>) {
         let mut temp_heap = BinaryHeap::new();
         mem::swap(&mut temp_heap, &mut self.heap);
@@ -90,15 +91,15 @@ fn parse_grid(input: &str) -> (Grid, Position, Position) {
     }
     let mut from = (0, 0);
     let mut to = (0, 0);
-    for i in 0..GRID_HEIGHT {
-        for j in 0..GRID_WIDTH {
-            match grid[i][j] {
+    for (i, lines) in grid.iter_mut().enumerate() {
+        for (j, cell) in lines.iter_mut().enumerate() {
+            match cell {
                 b'S' => {
-                    grid[i][j] = b'a';
+                    *cell = b'a';
                     from = (i, j);
                 }
                 b'E' => {
-                    grid[i][j] = b'z';
+                    *cell = b'z';
                     to = (i, j);
                 }
                 _ => {}
@@ -108,7 +109,7 @@ fn parse_grid(input: &str) -> (Grid, Position, Position) {
     (grid, from, to)
 }
 
-fn get_neighbours((i, j): Position, grid: &Grid) -> Vec<Position> {
+fn next_steps_up((i, j): Position, grid: &Grid) -> Vec<Position> {
     let mut neighbours = Vec::new();
     let max_height = grid[i][j] + 1;
     if i > 0 && grid[i - 1][j] <= max_height {
@@ -126,24 +127,47 @@ fn get_neighbours((i, j): Position, grid: &Grid) -> Vec<Position> {
     neighbours
 }
 
-pub fn part_one((grid, from, to): Input) -> Solution {
+fn next_steps_down((i, j): Position, grid: &Grid) -> Vec<Position> {
+    let mut neighbours = Vec::new();
+    let min_height = grid[i][j] - 1;
+    if i > 0 && grid[i - 1][j] >= min_height {
+        neighbours.push((i - 1, j));
+    }
+    if i < GRID_HEIGHT - 1 && grid[i + 1][j] >= min_height {
+        neighbours.push((i + 1, j));
+    }
+    if j > 0 && grid[i][j - 1] >= min_height {
+        neighbours.push((i, j - 1));
+    }
+    if j < GRID_WIDTH - 1 && grid[i][j + 1] >= min_height {
+        neighbours.push((i, j + 1));
+    }
+    neighbours
+}
+
+fn solve(
+    grid: &Grid,
+    start: Position,
+    check: impl Fn(Position) -> bool,
+    next_steps: impl Fn(Position, &Grid) -> Vec<Position>,
+) -> Solution {
     let mut traveled = HashMap::new();
     let mut to_travel = VertexHeap::new();
 
     to_travel.push(Vertex {
-        position: *from,
+        position: start,
         distance: 0,
     });
 
     loop {
         let Vertex { position, distance } = to_travel.pop().unwrap();
         traveled.insert(position, distance);
-        if position == *to {
+        if check(position) {
             return Some(distance);
         }
 
         let following_distance = distance + 1;
-        let neighbours = get_neighbours(position, grid)
+        let neighbours = next_steps(position, grid)
             .into_iter()
             .filter(|n| !traveled.contains_key(n))
             .collect();
@@ -151,8 +175,17 @@ pub fn part_one((grid, from, to): Input) -> Solution {
     }
 }
 
-pub fn part_two(input: Input) -> Solution {
-    None
+pub fn part_one((grid, s, e): Input) -> Solution {
+    solve(grid, *s, |position| position == *e, next_steps_up)
+}
+
+pub fn part_two((grid, _, e): Input) -> Solution {
+    solve(
+        grid,
+        *e,
+        |position| grid[position.0][position.1] == b'a',
+        next_steps_down,
+    )
 }
 
 fn main() -> AocResult<()> {
@@ -183,6 +216,6 @@ mod tests {
     fn test_part_two() {
         let input = advent_of_code::read_file(Folder::Examples, DAY);
         let input = parse_grid(&input);
-        assert_eq!(part_two(&input), None);
+        assert_eq!(part_two(&input), Some(29));
     }
 }
