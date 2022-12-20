@@ -2,26 +2,14 @@ use advent_of_code::helpers::{AocResult, Folder};
 use std::{cmp::Ordering, ops::RangeInclusive, fmt::Debug};
 
 const DAY: u8 = 14;
-type Input<'a> = (&'a mut Grid, usize);
+type Input<'a> = (Grid, usize);
 type Solution = Option<u32>;
 
 const ORIGIN: Coords = Coords(500, 0);
 
-#[cfg(test)]
-const OFFSET_X: usize = 490;
-#[cfg(not(test))]
-const OFFSET_X: usize = 450;
-
-
-#[cfg(test)]
-const SIZE_X: usize = 20;
-#[cfg(not(test))]
-const SIZE_X: usize = 100;
-
-#[cfg(test)]
-const SIZE_Y: usize = 10;
-#[cfg(not(test))]
-const SIZE_Y: usize = 165;
+const OFFSET_X: usize = 330;
+const SIZE_X: usize = 340;
+const SIZE_Y: usize = 167;
 
 type Grid = Vec<Vec<Tile>>;
 
@@ -91,7 +79,7 @@ impl Iterator for VerticalLine {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 struct Coords(usize, usize);
 
 impl Coords {
@@ -160,25 +148,38 @@ fn get_next(point: &Coords, grid: &Grid) -> Option<Coords> {
 	}
 }
 
-pub fn part_one((grid, bottom): Input) -> Solution {
+fn run(mut grid: Grid, check_next: impl Fn(&Coords) -> bool, check_current: impl Fn(&Coords) -> bool) -> u32 {
 	let mut current = ORIGIN;
 	let mut placed = 0;
-    loop {
-		current = if let Some(next) = get_next(&current, grid) {
-			if next.1 >= bottom {
-				return Some(placed);
+
+	'out: loop {
+		current = if let Some(next) = get_next(&current, &grid) {
+			if check_next(&next) {
+				break 'out; 
 			}
 			next
 		} else {
+			if check_current(&current) {
+				break 'out;
+			}
 			grid[current.0 - OFFSET_X][current.1] = Tile::Sand;
 			placed += 1;
 			ORIGIN
 		}
 	}
+	placed
 }
 
-pub fn part_two(input: Input) -> Solution {
-    None
+pub fn part_one((grid, bottom): Input) -> Solution {
+	Some(run(grid, |n| n.1 >= bottom, |_| false))
+}
+
+pub fn part_two((mut grid, bottom): Input) -> Solution {
+	let bottom = bottom + 2;
+	for tile in grid.iter_mut() {
+		tile[bottom] = Tile::Rock;
+	}
+	Some(run(grid, |_| false, |c| *c == ORIGIN) + 1)
 }
 
 fn main() -> AocResult<()> {
@@ -187,9 +188,9 @@ fn main() -> AocResult<()> {
         parse_grid(&input)
     };
 
-    let (mut grid, bottom) = advent_of_code::load!(setup)?;
-    advent_of_code::solve!(1, part_one, (&mut grid, bottom));
-    advent_of_code::solve!(2, part_two, (&mut grid, bottom));
+    let (grid, bottom) = advent_of_code::load!(setup)?;
+    advent_of_code::solve!(1, part_one, (grid.clone(), bottom));
+    advent_of_code::solve!(2, part_two, (grid, bottom));
     Ok(())
 }
 
@@ -200,13 +201,14 @@ mod tests {
     #[test]
     fn test_part_one() {
         let input = advent_of_code::read_file(Folder::Examples, DAY);
-		let (mut grid, bottom) = parse_grid(&input).unwrap();
-        assert_eq!(part_one((&mut grid, bottom)), Some(24));
+		let (grid, bottom) = parse_grid(&input).unwrap();
+        assert_eq!(part_one((grid, bottom)), Some(24));
     }
 
     #[test]
     fn test_part_two() {
-        //let input = advent_of_code::helpers::read_input(Folder::Examples, DAY).unwrap();
-        //assert_eq!(part_two(&input), None);
+        let input = advent_of_code::read_file(Folder::Examples, DAY);
+		let (grid, bottom) = parse_grid(&input).unwrap();
+		assert_eq!(part_two((grid, bottom)), Some(93));
     }
 }
