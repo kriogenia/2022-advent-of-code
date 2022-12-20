@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, fmt::Debug};
+use std::cmp::Ordering;
 
 use advent_of_code::helpers::{AocResult, Folder};
 
@@ -13,14 +13,7 @@ pub struct Pair {
 
 impl Pair {
     fn is_right_order(&self) -> bool {
-		self.left <= self.right
-    }
-}
-
-impl Debug for Pair {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "\n{:?}", self.left).unwrap();
-        writeln!(f, "{:?}", self.right)
+        self.left <= self.right
     }
 }
 
@@ -101,15 +94,6 @@ impl Ord for Data {
     }
 }
 
-impl Debug for Data {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::List(arg0) => write!(f, "{:?}", arg0),
-            Self::Integer(arg0) => write!(f, "{}", arg0),
-        }
-    }
-}
-
 fn parse_packets(input: &str) -> AocResult<Vec<Pair>> {
     let mut pairs = Vec::new();
     let mut lines = input.lines();
@@ -122,18 +106,43 @@ fn parse_packets(input: &str) -> AocResult<Vec<Pair>> {
 }
 
 pub fn part_one(input: Input) -> Solution {
-	Some(
+    Some(
         input
             .iter()
             .enumerate()
             .filter(|(_, p)| p.is_right_order())
             .map(|(i, _)| i + 1)
-            .sum()
+            .sum(),
     )
 }
 
-pub fn part_two(input: Input) -> Solution {
-    None
+macro_rules! div_package {
+    ($value:literal) => {
+        Data::List(vec![Data::List(vec![Data::Integer($value)])])
+    };
+}
+
+pub fn part_two(input: Vec<Pair>) -> Solution {
+    let mut packets: Vec<Data> = input
+        .into_iter()
+        .flat_map(|p| vec![p.left, p.right].into_iter())
+        .collect();
+
+    packets.push(div_package!(2));
+    packets.push(div_package!(6));
+    packets.sort();
+
+    let (first, _) = packets
+        .iter()
+        .enumerate()
+        .find(|(_, p)| *p == &div_package!(2))
+        .expect("package matching [[2]]");
+    let (second, _) = packets
+        .iter()
+        .enumerate()
+        .find(|(_, p)| *p == &div_package!(6))
+        .expect("package matching [[6]]");
+    Some((first + 1) * (second + 1))
 }
 
 fn main() -> AocResult<()> {
@@ -144,7 +153,7 @@ fn main() -> AocResult<()> {
 
     let input = advent_of_code::load!(setup)?;
     advent_of_code::solve!(1, part_one, &input);
-    advent_of_code::solve!(2, part_two, &input);
+    advent_of_code::solve!(2, part_two, input);
     Ok(())
 }
 
@@ -161,14 +170,15 @@ mod tests {
 
     #[test]
     fn test_part_two() {
-        //let input = advent_of_code::helpers::read_input(Folder::Examples, DAY).unwrap();
-        //assert_eq!(part_two(&input), None);
+        let input = advent_of_code::read_file(Folder::Examples, DAY);
+        let input = parse_packets(&input).unwrap();
+        assert_eq!(part_two(input), Some(140));
     }
 
-	#[test]
-	fn test_list_vs_list() {
-		let input = "[[[[6,8],1,8],9,[[3],10,[5,7,2,4],2],8]]\n[[1,2,[]],[[2,[8,10],0,1,[10]]]]\n";
-		let input = &parse_packets(&input).unwrap()[0];
+    #[test]
+    fn test_list_vs_list() {
+        let input = "[[[[6,8],1,8],9,[[3],10,[5,7,2,4],2],8]]\n[[1,2,[]],[[2,[8,10],0,1,[10]]]]\n";
+        let input = &parse_packets(&input).unwrap()[0];
         assert!(!input.is_right_order());
-	}
+    }
 }

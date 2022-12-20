@@ -23,8 +23,9 @@ The following times were recorded in my local machine. Parsing time is usually c
 | **Day 10** | 25.28µs    | 908.00ns   | 4.82µs     | 31.01µs    |
 | **Day 11** | 28.71µs    | 39.95µs    | 16.08ms    | 16.77ms    |
 | **Day 12** | 26.75µs    | 3.84ms     | 1.82ms     | 5.69ms     |
+| **Day 13** | 401.24µs   | 7.61µs     | 216.16µs   | 625.01µs   |
 
-Total running time for all days and parts: **24.44ms** (at the moment).
+Total running time for all days and parts: **25.10ms** (at the moment).
 
 ## Some thoughs
 * The template of *fspoettel* is awesome but I tweaked a bit to match my intentions, like parsing the input just once for both parts if it's possible.
